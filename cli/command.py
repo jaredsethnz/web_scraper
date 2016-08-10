@@ -1,4 +1,5 @@
 from cmd import Cmd
+from cli.commandreferences import *
 import wdr.webrequest
 
 
@@ -6,16 +7,19 @@ class Command(Cmd):
 
     def __init__(self):
         Cmd.__init__(self)
-        self.web_request = None
+        self.web_request = wdr.webrequest.WebRequest()
 
-    def do_args(self, args):
+    def do_request(self, args):
         """
-        Displays the passed arguments
-        :param args:
-        :return:
+        request n (new) http:// (url)
+        request f (fetch)
+        request p (print data)
         """
-        print(args)
+        args = args.split()
+        method = getattr(self.web_request, request_params.get(args[0]))
+        print(method(args[1]))
 
+    # Request related functions follow
     def do_new_request(self, args):
         """
         Prepares new request
@@ -23,7 +27,6 @@ class Command(Cmd):
         """
         self.web_request = wdr.webrequest.WebRequest(args)
 
-    # Request related functions follow
     def do_print_request_url(self, args):
         if self.web_request is not None:
             print(self.web_request.get_url())
