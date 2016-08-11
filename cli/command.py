@@ -1,13 +1,15 @@
 from cmd import Cmd
 from cli.commandreferences import *
-import wdr.webrequest
+from view.consoleview import *
+from wdr.webrequest import *
 
 
 class Command(Cmd):
 
     def __init__(self):
         Cmd.__init__(self)
-        self.web_request = wdr.webrequest.WebRequest()
+        self.view = ConsoleView()
+        self.web_request = WebRequest()
 
     def do_request(self, args):
         """
@@ -25,7 +27,7 @@ class Command(Cmd):
         Prepares new request
         :return:
         """
-        self.web_request = wdr.webrequest.WebRequest(args)
+        self.web_request = WebRequest(args)
 
     def do_print_request_url(self, args):
         if self.web_request is not None:

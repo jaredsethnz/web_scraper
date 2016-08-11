@@ -1,5 +1,5 @@
 import requests
-# import bn4
+import bs4
 
 
 class WebRequest(object):
@@ -21,3 +21,6 @@ class WebRequest(object):
     def fetch_request_data(self, args):
         r = self.requests.get(self.url)
         self.request_data = r.text
+
+
+request_options = {'p': 'print', 'u': 'url', 'f': 'fetch', 'r': 'recursive'}
