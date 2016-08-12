@@ -11,7 +11,7 @@ class Command(Cmd):
         Cmd.__init__(self)
         self.view = ConsoleView()
         self.web_request = WebRequest()
-        self.web_data = WebData()
+        self.web_data = WebData(self.web_request)
         self.graph_creator = GraphCreator(self.web_data)
 
     def do_request(self, args):
