@@ -7,6 +7,9 @@ class OptionFilter(object):
     COMMAND_PARAM = 1
     COMMAND_PARAM_2 = 2
     COMMAND_COUNT = 1
+    COMMAND_COUNT_1 = 1
+    COMMAND_COUNT_2 = 2
+    COMMAND_COUNT_3 = 3
     COMMAND_PARAM_DELIMITER = '--'
     COMMAND_ERROR_MSG = 'command error, run help command for command details.....'
     URL_SCHEME = 0
@@ -38,8 +41,8 @@ class OptionFilter(object):
             if param is not None and len(arg_param) == param[self.COMMAND_COUNT]:
                 method = getattr(self, param[self.COMMAND_OPTION])
                 command.append(method)
-                value1 = arg_param[self.COMMAND_PARAM] if param[self.COMMAND_COUNT] > 1 else None
-                value2 = arg_param[self.COMMAND_PARAM_2] if param[self.COMMAND_COUNT] > 2 else None
+                value1 = arg_param[self.COMMAND_PARAM] if param[self.COMMAND_COUNT] > self.COMMAND_COUNT_1 else None
+                value2 = arg_param[self.COMMAND_PARAM_2] if param[self.COMMAND_COUNT] > self.COMMAND_COUNT_2 else None
                 command.append(value1)
                 command.append(value2)
             else:

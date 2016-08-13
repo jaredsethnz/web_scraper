@@ -3,6 +3,7 @@ from webscraper.model.graphcreator import GraphCreator
 from webscraper.model.webdata import WebData
 from webscraper.model.webrequest import *
 from webscraper.view.consoleview import *
+from webscraper.model.webobject import WebObjectFactory
 
 
 class Command(Cmd):
@@ -11,7 +12,8 @@ class Command(Cmd):
         Cmd.__init__(self)
         self.view = ConsoleView()
         self.web_request = WebRequest()
-        self.web_data = WebData(self.web_request)
+        self.web_object_factory = WebObjectFactory()
+        self.web_data = WebData(self.web_request, self.web_object_factory)
         self.graph_creator = GraphCreator(self.web_data)
 
     def do_request(self, args):

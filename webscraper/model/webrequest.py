@@ -7,7 +7,6 @@ from webscraper.view.consoleview import ConsoleView
 
 class WebRequest(OptionFilter, MessageHandler):
 
-    # https://www.mightyape.co.nz/Games/PS4/Best-Sellers
     PRINT_DATA_MSG = 'No data to display.....'
     URL_NOT_VALID_MSG = 'please enter a valid url.....'
 
