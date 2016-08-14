@@ -10,3 +10,4 @@ class ConsoleView(object):
     def display_items(self, items):
         for item in items:
             print(item)
+            print('\n**********************************************************************\n')

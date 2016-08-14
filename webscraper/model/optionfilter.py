@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+import re
 
 
 class OptionFilter(object):
@@ -6,11 +7,17 @@ class OptionFilter(object):
     COMMAND_OPTION = 0
     COMMAND_PARAM = 1
     COMMAND_PARAM_2 = 2
+    COMMAND_PARAM_3 = 3
     COMMAND_COUNT = 1
     COMMAND_COUNT_1 = 1
     COMMAND_COUNT_2 = 2
     COMMAND_COUNT_3 = 3
+    PARAMETER_ONE = 0
+    PARAMETER_TWO = 1
+    PARAMETER_THREE = 2
     COMMAND_PARAM_DELIMITER = '--'
+    COMMAND_SECOND_LEVEL_DELIMITER = '|'
+    COMMAND_SECOND_LEVEL_DELIMITER_TWO = ':'
     COMMAND_ERROR_MSG = 'command error, run help command for command details.....'
     URL_SCHEME = 0
     URL_SCHEME_HTTP = 'http'
@@ -43,12 +50,27 @@ class OptionFilter(object):
                 command.append(method)
                 value1 = arg_param[self.COMMAND_PARAM] if param[self.COMMAND_COUNT] > self.COMMAND_COUNT_1 else None
                 value2 = arg_param[self.COMMAND_PARAM_2] if param[self.COMMAND_COUNT] > self.COMMAND_COUNT_2 else None
+                value3 = arg_param[self.COMMAND_PARAM_3] if param[self.COMMAND_COUNT] > self.COMMAND_COUNT_3 else None
                 command.append(value1)
                 command.append(value2)
+                command.append(value3)
             else:
                 valid_commands = False
             commands.append(command)
         return None if not valid_commands or len(args) == 0 else commands
+
+    def check_second_level_args(self, args):
+        params = []
+        pattern = re.compile('[A-Za-z0-9]+:[A-Za-z0-9]+:[A-Za-z0-9]+$')
+        args = args[self.COMMAND_OPTION].split(self.COMMAND_SECOND_LEVEL_DELIMITER)
+        for arg in args:
+            if pattern.match(arg):
+                param = arg.split(self.COMMAND_SECOND_LEVEL_DELIMITER_TWO)
+                params.append([param[self.PARAMETER_ONE], param[self.PARAMETER_TWO], param[self.PARAMETER_THREE]])
+            else:
+                self.view.display_item(self.COMMAND_ERROR_MSG)
+                return None
+        return None if len(params) is 0 else params
 
     def check_url(self, url):
         valid_url = False
