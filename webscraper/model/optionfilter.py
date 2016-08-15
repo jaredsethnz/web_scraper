@@ -72,6 +72,13 @@ class OptionFilter(object):
                 return None
         return None if len(params) is 0 else params
 
+    def check_second_level_param_count(self, params, count):
+        if len(params) == count:
+            return True
+        else:
+            self.view.display_item('incorrect parameter count, expected ' + str(count) + '.....')
+            return False
+
     def check_url(self, url):
         valid_url = False
         match = urlparse(url)
