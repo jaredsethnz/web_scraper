@@ -9,6 +9,7 @@ class WebData(OptionFilter):
     CLASS_ID = 1
     CLASS_ID_NAME = 2
     CONSOLIDATE_DATA_PARAM_COUNT = 2
+    CONSOLIDATE_ERROR_MSG = 'Error consolidating data, please try again...'
 
     def __init__(self, web_request, web_object_factory):
         super(OptionFilter).__init__()
@@ -71,17 +72,23 @@ class WebData(OptionFilter):
                 self.view.display_item('filtering recursive data.....')
                 rec_data = BeautifulSoup(data, 'html.parser')\
                     .find(data_options[self.TAG_TYPE],
-                          attrs={data_options[self.CLASS_ID]: args[data_options.CLASS_ID_NAME]})
+                          attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
                 self.filtered_recursive_data.append(rec_data)
         except TypeError:
             self.view.display_item(self.COMMAND_ERROR_MSG)
             return
 
     def filter_urls(self, *args):
-        self.view.display_item('filtering urls.....')
-        for data in self.filtered_data:
-            url = data.find(args[self.TAG_TYPE], attrs={args[self.CLASS_ID]: args[self.CLASS_ID_NAME]})
-            self.web_request.add_recursive_url(url['href'])
+        try:
+            data_options = self.check_second_level_args(args)[self.COMMAND_OPTION]
+            self.view.display_item('filtering urls.....')
+            for data in self.filtered_data:
+                url = data.find(data_options[self.TAG_TYPE],
+                                attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
+                self.web_request.add_recursive_url(url['href'])
+        except TypeError:
+            self.view.display_item(self.COMMAND_ERROR_MSG)
+            return
 
     def set_data_keywords(self, *args):
         kw_pairs = self.check_second_level_args(args)
@@ -102,30 +109,48 @@ class WebData(OptionFilter):
     def consolidate_data(self, *args):
         params = self.check_second_level_args(args)
         if self.check_second_level_param_count(params, self.CONSOLIDATE_DATA_PARAM_COUNT):
-            attr_one = params[self.PARAMETER_ONE][self.PARAMETER_ONE]
-            att_two = params[self.PARAMETER_TWO][self.PARAMETER_ONE]
-            self.view.display_item(attr_one + ' --- ' + att_two)
+            func_one = self.method_options(params[self.PARAMETER_ONE][self.PARAMETER_ONE], web_data_consolidate_options)
+            func_two = self.method_options(params[self.PARAMETER_TWO][self.PARAMETER_ONE], web_data_consolidate_options)
+            try:
+                func_one(self.filtered_data, self.filtered_data_keywords,
+                         params[self.PARAMETER_ONE][self.PARAMETER_TWO],
+                         params[self.PARAMETER_ONE][self.PARAMETER_THREE])
+                func_two(self.filtered_recursive_data, self.filtered_recursive_data_keywords,
+                         params[self.PARAMETER_TWO][self.PARAMETER_TWO],
+                         params[self.PARAMETER_TWO][self.PARAMETER_THREE])
+            except TypeError:
+                self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
     def filter_by_children(self, *args):
-        print(args)
+        try:
+            data_depth = int(args[2])
+            while data_depth > 0:
+                data_depth -= 1
+                print(str(data_depth))
+            else:
+                print('IM ZERO, NOT ZORRO')
+        except ValueError:
+            self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
     def filter_by_keywords(self, *args):
+        data = args[self.PARAMETER_ONE]
+        data_kw = args[self.PARAMETER_TWO]
         obj_attr = {}
-        for fdata in self.filtered_data:
-            for kw_pair in self.filtered_data_keywords:
+        for d in data:
+            for kw_pair in data_kw:
                 try:
-                    value = fdata.find(kw_pair[self.PARAMETER_ONE],
+                    value = d.find(kw_pair[self.PARAMETER_ONE],
                                        {kw_pair[self.PARAMETER_TWO]: kw_pair[self.PARAMETER_THREE]}).string
                     self.view.display_item(value)
                 except AttributeError:
-                    self.view.display_item('Error consolidating data, please try again...')
+                    self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
 
 # possible web data options and parameter count
 web_data_options = {'c': ['clear_data', 2], 'p': ['print_data', 2],
                     'l': ['load_saved_data', 2], 's': ['save_data', 2],
                     'g': ['get_request_data', 2], 'gr': ['get_recursive_request_data', 2],
-                    'cf': ['clear_filtered_data', 1], 'fu': ['filter_urls', 4],
+                    'cf': ['clear_filtered_data', 1], 'fu': ['filter_urls', 2],
                     'dk': ['set_data_keywords', 2], 'rdk': ['set_recursive_data_keywords', 2],
                     'cd': ['consolidate_data', 2]}
 
