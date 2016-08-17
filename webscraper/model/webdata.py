@@ -108,7 +108,7 @@ class WebData(OptionFilter):
 
     def consolidate_data(self, *args):
         params = self.check_second_level_args(args)
-        if self.check_second_level_param_count(params, self.CONSOLIDATE_DATA_PARAM_COUNT):
+        if params is not None and self.check_second_level_param_count(params, self.CONSOLIDATE_DATA_PARAM_COUNT):
             func_one = self.method_options(params[self.PARAMETER_ONE][self.PARAMETER_ONE], web_data_consolidate_options)
             func_two = self.method_options(params[self.PARAMETER_TWO][self.PARAMETER_ONE], web_data_consolidate_options)
             try:
@@ -123,12 +123,23 @@ class WebData(OptionFilter):
 
     def filter_by_children(self, *args):
         try:
+            data = args[0]
             data_depth = int(args[2])
             while data_depth > 0:
+                self.view.display_items('TESTINGS****************')
+                for i in 2:
+                    pass
+                    #data[i] = data[i].next_sibling
                 data_depth -= 1
-                print(str(data_depth))
-            else:
-                print('IM ZERO, NOT ZORRO')
+            print('IM ZERO, NOT ZORRO')
+            for d in data:
+                for dc in d.find_all('div'):
+                    for child in dc.children:
+                        if child.name == 'span' and child.next_element is not None:
+                            self.view.display_item('*****************************************************************')
+                            self.view.display_item(child)
+                            self.view.display_item(dc.next_element)
+
         except ValueError:
             self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
