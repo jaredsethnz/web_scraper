@@ -1,7 +1,8 @@
+from orderedset import OrderedSet
 from webscraper.model.optionfilter import OptionFilter
 from webscraper.view.consoleview import ConsoleView
 from bs4 import BeautifulSoup
-
+import re
 
 class WebData(OptionFilter):
 
@@ -123,23 +124,25 @@ class WebData(OptionFilter):
 
     def filter_by_children(self, *args):
         try:
+            obj_names = []
+            obj_values = []
             data = args[0]
             data_depth = int(args[2])
             while data_depth > 0:
-                self.view.display_items('TESTINGS****************')
-                for i in 2:
-                    pass
-                    #data[i] = data[i].next_sibling
                 data_depth -= 1
-            print('IM ZERO, NOT ZORRO')
             for d in data:
+                names = OrderedSet()
+                values = []
                 for dc in d.find_all('div'):
-                    for child in dc.children:
-                        if child.name == 'span' and child.next_element is not None:
-                            self.view.display_item('*****************************************************************')
-                            self.view.display_item(child)
-                            self.view.display_item(dc.next_element)
-
+                    name = dc.find('span')
+                    value = dc.find('div')
+                    if value and name is not None:
+                        if name.text not in names:
+                            names.add(name.text)
+                            values.append(value.text)
+                obj_names.append(names)
+                obj_values.append(values)
+            self.sanitise_attributes(obj_names, obj_values)
         except ValueError:
             self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
@@ -155,6 +158,23 @@ class WebData(OptionFilter):
                     self.view.display_item(value)
                 except AttributeError:
                     self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
+
+    def sanitise_attributes(self, obj_names, obj_values):
+        obj_attr = []
+        for names, values in zip(obj_names, obj_values):
+            attrs = {}
+            self.view.display_item('********************************')
+            for name, value in zip(names, values):
+                value = value.replace(name, '')
+                name = name.replace(value, '')
+                sanitized_name = name.replace('\n', '').replace(' ', '')
+                sanitized_value = re.sub(' +', ' ', value.replace('\n', '')).strip()
+                self.view.display_item('----------------------------')
+                self.view.display_item(sanitized_name)
+                self.view.display_item(sanitized_value)
+                attrs[sanitized_name] = sanitized_value
+            obj_attr.append(attrs)
+        # self.view.display_items(obj_values)
 
 
 # possible web data options and parameter count
