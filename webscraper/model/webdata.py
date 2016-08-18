@@ -1,8 +1,10 @@
 from orderedset import OrderedSet
 from webscraper.model.optionfilter import OptionFilter
+from webscraper.model.webobject import WebObject
 from webscraper.view.consoleview import ConsoleView
 from bs4 import BeautifulSoup
 import re
+import numpy
 
 class WebData(OptionFilter):
 
@@ -46,6 +48,7 @@ class WebData(OptionFilter):
 
     def load_saved_data(self, *args):
         self.view.display_item('loading saved data.....')
+        print(self.web_object_factory.build_object('GAMES', {'Test1': '1', 'Test2': '2'}))
 
     def save_data(self, *args):
         self.view.display_item('saving data to disk.....')
@@ -113,12 +116,13 @@ class WebData(OptionFilter):
             func_one = self.method_options(params[self.PARAMETER_ONE][self.PARAMETER_ONE], web_data_consolidate_options)
             func_two = self.method_options(params[self.PARAMETER_TWO][self.PARAMETER_ONE], web_data_consolidate_options)
             try:
-                func_one(self.filtered_data, self.filtered_data_keywords,
+                attr_one = func_one(self.filtered_data, self.filtered_data_keywords,
                          params[self.PARAMETER_ONE][self.PARAMETER_TWO],
                          params[self.PARAMETER_ONE][self.PARAMETER_THREE])
-                func_two(self.filtered_recursive_data, self.filtered_recursive_data_keywords,
+                attr_two = func_two(self.filtered_recursive_data, self.filtered_recursive_data_keywords,
                          params[self.PARAMETER_TWO][self.PARAMETER_TWO],
                          params[self.PARAMETER_TWO][self.PARAMETER_THREE])
+                self.create_web_data_object(attr_one, attr_two)
             except TypeError:
                 self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
@@ -140,24 +144,30 @@ class WebData(OptionFilter):
                         if name.text not in names:
                             names.add(name.text)
                             values.append(value.text)
-                obj_names.append(names)
-                obj_values.append(values)
-            self.sanitise_attributes(obj_names, obj_values)
-        except ValueError:
+                    obj_names.append(names)
+                    obj_values.append(values)
+                print(obj_names)
+                print(obj_values)
+                web_objs = self.sanitise_attributes(obj_names, obj_values)
+                return web_objs
+        except AttributeError:
             self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
     def filter_by_keywords(self, *args):
         data = args[self.PARAMETER_ONE]
         data_kw = args[self.PARAMETER_TWO]
-        obj_attr = {}
+        obj_attr = []
         for d in data:
-            for kw_pair in data_kw:
-                try:
-                    value = d.find(kw_pair[self.PARAMETER_ONE],
-                                       {kw_pair[self.PARAMETER_TWO]: kw_pair[self.PARAMETER_THREE]}).string
-                    self.view.display_item(value)
-                except AttributeError:
-                    self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
+            try:
+                attrs = {}
+                for kw_pair in data_kw:
+                        value = d.find(kw_pair[self.PARAMETER_ONE],
+                                           {kw_pair[self.PARAMETER_TWO]: kw_pair[self.PARAMETER_THREE]}).string
+                        attrs[kw_pair[self.PARAMETER_THREE]] = value
+                obj_attr.append(attrs)
+            except AttributeError:
+                self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
+        return obj_attr
 
     def sanitise_attributes(self, obj_names, obj_values):
         obj_attr = []
@@ -169,13 +179,16 @@ class WebData(OptionFilter):
                 name = name.replace(value, '')
                 sanitized_name = name.replace('\n', '').replace(' ', '')
                 sanitized_value = re.sub(' +', ' ', value.replace('\n', '')).strip()
-                self.view.display_item('----------------------------')
-                self.view.display_item(sanitized_name)
-                self.view.display_item(sanitized_value)
                 attrs[sanitized_name] = sanitized_value
             obj_attr.append(attrs)
-        # self.view.display_items(obj_values)
+        return obj_attr
 
+    def create_web_data_object(self, attr_one, attr_two):
+        print('DONE.........')
+        for attr_one, attr_two in zip(attr_one, attr_two):
+            print(attr_one)
+            print(attr_two)
+            print('*************************************')
 
 # possible web data options and parameter count
 web_data_options = {'c': ['clear_data', 2], 'p': ['print_data', 2],
