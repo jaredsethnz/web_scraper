@@ -20,6 +20,5 @@ class WebObjectFactory(object):
 
     def build_object(self, *args):
         self.data_object = type(args[0], (WebObject,), args[1])
-        print('TESTING')
         return self.data_object
 

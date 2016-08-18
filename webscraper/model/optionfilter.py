@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+from decimal import Decimal
 import re
 
 
@@ -80,9 +81,33 @@ class OptionFilter(object):
             self.view.display_item('incorrect parameter count, expected ' + str(count) + '.....')
             return False
 
+    def check_data_type(self, str_value):
+        pass
+
+    def check_data_int(self, str_value):
+        pattern = re.compile('[0-9]+$')
+        int_value = None
+        if pattern.match(str_value):
+            int_value = int(str_value)
+        return int_value
+
+    def check_data_currency(self, str_value):
+        pattern = re.compile('\$[1-9]?[0-9]+\.[0-9][0-9]')
+        currency_value = None
+        if pattern.match(str_value):
+            str_value = str_value.strip('$')
+            currency_value = Decimal(str_value)
+        return currency_value
+
+    def check_data_date(self, str_value):
+        pass
+
     def check_url(self, url):
         valid_url = False
         match = urlparse(url)
         if match[self.URL_SCHEME] == self.URL_SCHEME_HTTP or match[self.URL_SCHEME] == self.URL_SCHEME_HTTPS:
             valid_url = True
         return valid_url
+
+
+

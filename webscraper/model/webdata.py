@@ -4,10 +4,9 @@ from webscraper.model.webobject import WebObject
 from webscraper.view.consoleview import ConsoleView
 from bs4 import BeautifulSoup
 import re
-import numpy
+
 
 class WebData(OptionFilter):
-
     TAG_TYPE = 0
     CLASS_ID = 1
     CLASS_ID_NAME = 2
@@ -48,18 +47,18 @@ class WebData(OptionFilter):
 
     def load_saved_data(self, *args):
         self.view.display_item('loading saved data.....')
-        print(self.web_object_factory.build_object('GAMES', {'Test1': '1', 'Test2': '2'}))
 
     def save_data(self, *args):
         self.view.display_item('saving data to disk.....')
-        data = self.check_second_level_args(args)
-        self.view.display_item(data)
+        for wo in self.web_data_objects:
+            self.view.display_item(wo.display_data(wo))
+            self.view.display_item('**************************************************')
 
     def get_request_data(self, *args):
         try:
             data_options = self.check_second_level_args(args)[self.COMMAND_OPTION]
             data = self.web_request.get_request_data()
-            req_data = BeautifulSoup(data, 'html.parser')\
+            req_data = BeautifulSoup(data, 'html.parser') \
                 .findAll(data_options[self.TAG_TYPE],
                          attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
             for data in req_data:
@@ -74,7 +73,7 @@ class WebData(OptionFilter):
             data_options = self.check_second_level_args(args)[self.COMMAND_OPTION]
             for data in self.web_request.get_recursive_request_data():
                 self.view.display_item('filtering recursive data.....')
-                rec_data = BeautifulSoup(data, 'html.parser')\
+                rec_data = BeautifulSoup(data, 'html.parser') \
                     .find(data_options[self.TAG_TYPE],
                           attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
                 self.filtered_recursive_data.append(rec_data)
@@ -117,11 +116,11 @@ class WebData(OptionFilter):
             func_two = self.method_options(params[self.PARAMETER_TWO][self.PARAMETER_ONE], web_data_consolidate_options)
             try:
                 attr_one = func_one(self.filtered_data, self.filtered_data_keywords,
-                         params[self.PARAMETER_ONE][self.PARAMETER_TWO],
-                         params[self.PARAMETER_ONE][self.PARAMETER_THREE])
+                                    params[self.PARAMETER_ONE][self.PARAMETER_TWO],
+                                    params[self.PARAMETER_ONE][self.PARAMETER_THREE])
                 attr_two = func_two(self.filtered_recursive_data, self.filtered_recursive_data_keywords,
-                         params[self.PARAMETER_TWO][self.PARAMETER_TWO],
-                         params[self.PARAMETER_TWO][self.PARAMETER_THREE])
+                                    params[self.PARAMETER_TWO][self.PARAMETER_TWO],
+                                    params[self.PARAMETER_TWO][self.PARAMETER_THREE])
                 self.create_web_data_object(attr_one, attr_two)
             except TypeError:
                 self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
@@ -132,8 +131,6 @@ class WebData(OptionFilter):
             obj_values = []
             data = args[0]
             data_depth = int(args[2])
-            while data_depth > 0:
-                data_depth -= 1
             for d in data:
                 names = OrderedSet()
                 values = []
@@ -144,12 +141,10 @@ class WebData(OptionFilter):
                         if name.text not in names:
                             names.add(name.text)
                             values.append(value.text)
-                    obj_names.append(names)
-                    obj_values.append(values)
-                print(obj_names)
-                print(obj_values)
-                web_objs = self.sanitise_attributes(obj_names, obj_values)
-                return web_objs
+                obj_names.append(names)
+                obj_values.append(values)
+            web_objs = self.sanitise_attributes(obj_names, obj_values)
+            return web_objs
         except AttributeError:
             self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
@@ -161,9 +156,9 @@ class WebData(OptionFilter):
             try:
                 attrs = {}
                 for kw_pair in data_kw:
-                        value = d.find(kw_pair[self.PARAMETER_ONE],
-                                           {kw_pair[self.PARAMETER_TWO]: kw_pair[self.PARAMETER_THREE]}).string
-                        attrs[kw_pair[self.PARAMETER_THREE]] = value
+                    value = d.find(kw_pair[self.PARAMETER_ONE],
+                                   {kw_pair[self.PARAMETER_TWO]: kw_pair[self.PARAMETER_THREE]}).string
+                    attrs[kw_pair[self.PARAMETER_THREE]] = value
                 obj_attr.append(attrs)
             except AttributeError:
                 self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
@@ -173,7 +168,6 @@ class WebData(OptionFilter):
         obj_attr = []
         for names, values in zip(obj_names, obj_values):
             attrs = {}
-            self.view.display_item('********************************')
             for name, value in zip(names, values):
                 value = value.replace(name, '')
                 name = name.replace(value, '')
@@ -184,11 +178,12 @@ class WebData(OptionFilter):
         return obj_attr
 
     def create_web_data_object(self, attr_one, attr_two):
-        print('DONE.........')
         for attr_one, attr_two in zip(attr_one, attr_two):
-            print(attr_one)
-            print(attr_two)
-            print('*************************************')
+            self.view.display_item('creating object.....')
+            attr_one.update(attr_two)
+            new_obj = self.web_object_factory.build_object('Product', attr_one)
+            self.web_data_objects.append(new_obj)
+
 
 # possible web data options and parameter count
 web_data_options = {'c': ['clear_data', 2], 'p': ['print_data', 2],
