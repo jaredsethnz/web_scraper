@@ -13,10 +13,11 @@ class WebData(OptionFilter):
     CONSOLIDATE_DATA_PARAM_COUNT = 2
     CONSOLIDATE_ERROR_MSG = 'Error consolidating data, please try again...'
 
-    def __init__(self, web_request, web_object_factory):
+    def __init__(self, web_request, web_object_factory, data_handler):
         super(OptionFilter).__init__()
         self.web_request = web_request
         self.web_object_factory = web_object_factory
+        self.data_handler = data_handler
         self.filtered_data = []
         self.filtered_data_keywords = []
         self.filtered_recursive_data = []
@@ -27,8 +28,8 @@ class WebData(OptionFilter):
     def handle_command(self, args):
         return self.command(args, web_data_options)
 
-    def clear_data(self, *args):
-        self.view.display_item('clearing data.....')
+    def get_data(self):
+        return self.web_data_objects
 
     def clear_filtered_data(self, *args):
         self.view.display_item('clearing filtered data.....')
@@ -45,14 +46,21 @@ class WebData(OptionFilter):
         else:
             self.view.display_items(attr)
 
+    def print_web_data_object(self, *args):
+        self.view.display_item('displaying web data objects.....')
+        for wo in self.web_data_objects:
+            self.view.display_item(wo.display_data(wo))
+            self.view.display_item('----------------------------------------------------------------')
+
     def load_saved_data(self, *args):
         self.view.display_item('loading saved data.....')
+        self.web_data_objects = self.data_handler.load_objects(args[self.PARAMETER_ONE])
 
     def save_data(self, *args):
         self.view.display_item('saving data to disk.....')
-        for wo in self.web_data_objects:
-            self.view.display_item(wo.display_data(wo))
-            self.view.display_item('**************************************************')
+        print(WebObject())
+        obj = type('title', (WebObject, ), {})
+        self.data_handler.save_objects(obj, args[self.PARAMETER_ONE])
 
     def get_request_data(self, *args):
         try:
@@ -126,27 +134,24 @@ class WebData(OptionFilter):
                 self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
 
     def filter_by_children(self, *args):
-        try:
-            obj_names = []
-            obj_values = []
-            data = args[0]
-            data_depth = int(args[2])
-            for d in data:
-                names = OrderedSet()
-                values = []
+        obj_attrs = []
+        data = args[0]
+        for d in data:
+            names = OrderedSet()
+            attrs = {}
+            try:
                 for dc in d.find_all('div'):
                     name = dc.find('span')
                     value = dc.find('div')
                     if value and name is not None:
                         if name.text not in names:
                             names.add(name.text)
-                            values.append(value.text)
-                obj_names.append(names)
-                obj_values.append(values)
-            web_objs = self.sanitise_attributes(obj_names, obj_values)
-            return web_objs
-        except AttributeError:
-            self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
+                            attrs[name.text] = value.text
+                obj_attrs.append(attrs)
+            except AttributeError:
+                self.view.display_item('Error filtering data from children.....')
+        web_objs = self.sanitise_attributes(obj_attrs)
+        return web_objs
 
     def filter_by_keywords(self, *args):
         data = args[self.PARAMETER_ONE]
@@ -158,35 +163,43 @@ class WebData(OptionFilter):
                 for kw_pair in data_kw:
                     value = d.find(kw_pair[self.PARAMETER_ONE],
                                    {kw_pair[self.PARAMETER_TWO]: kw_pair[self.PARAMETER_THREE]}).string
+                    value = self.check_data_type(value) if value else 'unknown'
                     attrs[kw_pair[self.PARAMETER_THREE]] = value
                 obj_attr.append(attrs)
             except AttributeError:
                 self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
         return obj_attr
 
-    def sanitise_attributes(self, obj_names, obj_values):
-        obj_attr = []
-        for names, values in zip(obj_names, obj_values):
+    def sanitise_attributes(self, obj_attrs):
+        sanitised_obj_attrs = []
+        for dict in obj_attrs:
             attrs = {}
-            for name, value in zip(names, values):
-                value = value.replace(name, '')
-                name = name.replace(value, '')
-                sanitized_name = name.replace('\n', '').replace(' ', '')
-                sanitized_value = re.sub(' +', ' ', value.replace('\n', '')).strip()
-                attrs[sanitized_name] = sanitized_value
-            obj_attr.append(attrs)
-        return obj_attr
+            for key, value in dict.items():
+                value = value.replace(key, '')
+                key = key.replace(value, '')
+                sanitized_key = key.replace('\n', '').replace(' ', '').lower()
+                sanitized_value = re.sub('[ ]+', ' ', value.replace('\n', '')).strip()
+                sanitized_value = self.check_data_type(sanitized_value)
+                attrs[sanitized_key] = sanitized_value
+            sanitised_obj_attrs.append(attrs)
+        return sanitised_obj_attrs
 
-    def create_web_data_object(self, attr_one, attr_two):
-        for attr_one, attr_two in zip(attr_one, attr_two):
-            self.view.display_item('creating object.....')
-            attr_one.update(attr_two)
-            new_obj = self.web_object_factory.build_object('Product', attr_one)
-            self.web_data_objects.append(new_obj)
+    def create_web_data_object(self, attr_one, attr_two, obj_name='product'):
+        if len(attr_two) > 0:
+            for attr_one, attr_two in zip(attr_one, attr_two):
+                self.view.display_item('creating object.....')
+                attr_one.update(attr_two)
+                new_obj = self.web_object_factory.build_object(obj_name, attr_one)
+                self.web_data_objects.append(new_obj)
+        else:
+            for attr_one in attr_one:
+                self.view.display_item('creating object.....')
+                new_obj = self.web_object_factory.build_object(obj_name, attr_one)
+                self.web_data_objects.append(new_obj)
 
 
 # possible web data options and parameter count
-web_data_options = {'c': ['clear_data', 2], 'p': ['print_data', 2],
+web_data_options = {'wo': ['print_web_data_object', 1], 'p': ['print_data', 2],
                     'l': ['load_saved_data', 2], 's': ['save_data', 2],
                     'g': ['get_request_data', 2], 'gr': ['get_recursive_request_data', 2],
                     'cf': ['clear_filtered_data', 1], 'fu': ['filter_urls', 2],
@@ -194,7 +207,6 @@ web_data_options = {'c': ['clear_data', 2], 'p': ['print_data', 2],
                     'cd': ['consolidate_data', 2]}
 
 web_data_print_options = {'fdata': 'filtered_data', 'rdata': 'filtered_recursive_data',
-                          'fdkeywords': 'filtered_data_keywords', 'rfdkeywords': 'filtered_recursive_data_keywords',
-                          'wo': 'web_data_objects'}
+                          'fdkeywords': 'filtered_data_keywords', 'rfdkeywords': 'filtered_recursive_data_keywords'}
 
 web_data_consolidate_options = {'kw': 'filter_by_keywords', 'child': 'filter_by_children'}
