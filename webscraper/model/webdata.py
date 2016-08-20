@@ -1,9 +1,11 @@
+import re
+
+from bs4 import BeautifulSoup
 from orderedset import OrderedSet
+
 from webscraper.model.optionfilter import OptionFilter
 from webscraper.model.webobject import WebObject
 from webscraper.view.consoleview import ConsoleView
-from bs4 import BeautifulSoup
-import re
 
 
 class WebData(OptionFilter):
@@ -48,19 +50,25 @@ class WebData(OptionFilter):
 
     def print_web_data_object(self, *args):
         self.view.display_item('displaying web data objects.....')
+        self.view.display_item('----------------------------------------------------------------')
         for wo in self.web_data_objects:
-            self.view.display_item(wo.display_data(wo))
+            wo.func_display_data(wo, self.view)
             self.view.display_item('----------------------------------------------------------------')
+
+    def display_saves(self, *args):
+        self.data_handler.display_save_list()
 
     def load_saved_data(self, *args):
         self.view.display_item('loading saved data.....')
-        self.web_data_objects = self.data_handler.load_objects(args[self.PARAMETER_ONE])
+        loaded_objs = self.data_handler.load_objects(args[self.PARAMETER_ONE])
+        self.web_data_objects = loaded_objs
 
     def save_data(self, *args):
         self.view.display_item('saving data to disk.....')
-        print(WebObject())
-        obj = type('title', (WebObject, ), {})
-        self.data_handler.save_objects(obj, args[self.PARAMETER_ONE])
+        self.data_handler.save_objects(self.web_data_objects, args[self.PARAMETER_ONE])
+
+    def remove_data(self, *args):
+        self.data_handler.remove_objects(args[self.PARAMETER_ONE])
 
     def get_request_data(self, *args):
         try:
@@ -94,10 +102,15 @@ class WebData(OptionFilter):
             data_options = self.check_second_level_args(args)[self.COMMAND_OPTION]
             self.view.display_item('filtering urls.....')
             for data in self.filtered_data:
-                url = data.find(data_options[self.TAG_TYPE],
-                                attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
-                self.web_request.add_recursive_url(url['href'])
-        except TypeError:
+                tag_depth = self.check_data_int(data_options[self.CLASS_ID])
+                if tag_depth is not None:
+                    url = data.find_all(data_options[self.TAG_TYPE])
+                    self.web_request.add_recursive_url(url[tag_depth]['href'])
+                else:
+                    url = data.find(data_options[self.TAG_TYPE],
+                                    attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
+                    self.web_request.add_recursive_url(url['href'])
+        except (TypeError, KeyError, IndexError):
             self.view.display_item(self.COMMAND_ERROR_MSG)
             return
 
@@ -161,12 +174,19 @@ class WebData(OptionFilter):
             try:
                 attrs = {}
                 for kw_pair in data_kw:
-                    value = d.find(kw_pair[self.PARAMETER_ONE],
-                                   {kw_pair[self.PARAMETER_TWO]: kw_pair[self.PARAMETER_THREE]}).string
-                    value = self.check_data_type(value) if value else 'unknown'
-                    attrs[kw_pair[self.PARAMETER_THREE]] = value
+                    tag_depth = self.check_data_int(kw_pair[self.PARAMETER_TWO])
+                    if tag_depth is not None:
+                        value = d.find_all(kw_pair[self.PARAMETER_ONE])
+                        value = value[tag_depth].string
+                        value = self.check_data_type(value) if value else 'unknown'
+                        attrs[kw_pair[self.PARAMETER_THREE]] = value
+                    else:
+                        value = d.find(kw_pair[self.PARAMETER_ONE],
+                                       {kw_pair[self.PARAMETER_TWO]: kw_pair[self.PARAMETER_THREE]}).string
+                        value = self.check_data_type(value) if value else 'unknown'
+                        attrs[kw_pair[self.PARAMETER_THREE]] = value
                 obj_attr.append(attrs)
-            except AttributeError:
+            except (TypeError, KeyError, IndexError):
                 self.view.display_item(self.CONSOLIDATE_ERROR_MSG)
         return obj_attr
 
@@ -204,7 +224,8 @@ web_data_options = {'wo': ['print_web_data_object', 1], 'p': ['print_data', 2],
                     'g': ['get_request_data', 2], 'gr': ['get_recursive_request_data', 2],
                     'cf': ['clear_filtered_data', 1], 'fu': ['filter_urls', 2],
                     'dk': ['set_data_keywords', 2], 'rdk': ['set_recursive_data_keywords', 2],
-                    'cd': ['consolidate_data', 2]}
+                    'cd': ['consolidate_data', 2], 'ds': ['display_saves', 1],
+                    'rs': ['remove_data', 2]}
 
 web_data_print_options = {'fdata': 'filtered_data', 'rdata': 'filtered_recursive_data',
                           'fdkeywords': 'filtered_data_keywords', 'rfdkeywords': 'filtered_recursive_data_keywords'}

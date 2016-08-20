@@ -1,10 +1,11 @@
 from cmd import Cmd
+
 from webscraper.model.graphcreator import GraphCreator
 from webscraper.model.webdata import WebData
+from webscraper.model.webobject import DataHandler
+from webscraper.model.webobject import WebObjectFactory
 from webscraper.model.webrequest import *
 from webscraper.view.consoleview import *
-from webscraper.model.webobject import WebObjectFactory
-from webscraper.model.webobject import DataHandler
 
 
 class Command(Cmd):

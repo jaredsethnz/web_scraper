@@ -29,7 +29,7 @@ class GraphCreator(OptionFilter):
         count = 0
         largest_value = 0
         for key, value in self.data.items():
-            largest_value = value if value > largest_value else largest_value
+            largest_value = value if value >= largest_value else largest_value
             color = graph_colors[count]
             labels.append(key)
             sizes.append(value)
@@ -55,14 +55,14 @@ class GraphCreator(OptionFilter):
         for wd in web_data:
             try:
                 wd_attr = getattr(wd, attr_name)
-            except AttributeError:
+                if type(wd_attr) is decimal.Decimal:
+                    self.currency_data(wd_attr)
+                elif type(wd_attr) is date:
+                    self.date_data(wd_attr)
+                else:
+                    self.str_data(wd_attr)
+            except (AttributeError, UnboundLocalError):
                 self.view.display_item('Error, WebObject contains no attribute ' + attr_name + '.....')
-            if type(wd_attr) is decimal.Decimal:
-                self.currency_data(wd_attr)
-            elif type(wd_attr) is date:
-                self.date_data(wd_attr)
-            else:
-                self.str_data(wd_attr)
 
     def currency_data(self, value):
         self.view.display_item('currency')
