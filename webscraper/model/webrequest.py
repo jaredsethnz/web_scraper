@@ -1,5 +1,6 @@
 import requests
 from urllib.parse import urlparse
+
 from webscraper.model.messagehandler import MessageHandler
 from webscraper.model.optionfilter import OptionFilter
 from webscraper.view.consoleview import ConsoleView
@@ -9,6 +10,7 @@ class WebRequest(OptionFilter, MessageHandler):
 
     PRINT_DATA_MSG = 'No data to display.....'
     URL_NOT_VALID_MSG = 'please enter a valid url.....'
+    CONNECTION_ERROR_MSG = 'data fetch error.....'
 
     def __init__(self):
         super(OptionFilter).__init__()
@@ -17,6 +19,7 @@ class WebRequest(OptionFilter, MessageHandler):
         self.recursive_urls = []
         self.requests = requests
         self.request_data = None
+        self.requests_status_code = None
         self.recursive_request_data = []
         self.recursive_request_data_count = 0
         self.view = ConsoleView()
@@ -57,18 +60,27 @@ class WebRequest(OptionFilter, MessageHandler):
     def fetch_html(self, *args):
         if MessageHandler.check_none_condition(self, self.url, 'url not set.....'):
             self.view.display_item('fetching html from ' + self.url + '.....')
-            self.request_data = self.requests.get(self.url).text
+            try:
+                result = self.requests.get(self.url)
+                self.requests_status_code = result.status_code
+                self.request_data = result.text
+            except requests.RequestException:
+                self.view.display_item(self.CONNECTION_ERROR_MSG)
 
     def recursive_fetch(self, *args):
-        if len(self.recursive_urls) > 0:
-            self.view.display_item('fetching recursive html.....')
-            for url in self.recursive_urls:
-                self.view.display_item('fetching html from ' + url + '.....')
-                result = self.requests.get(url).text
-                self.recursive_request_data.append(result)
-                self.recursive_request_data_count += 1
-        else:
-            self.view.display_item('no recursive urls set.....')
+        try:
+            if len(self.recursive_urls) > 0:
+                self.view.display_item('fetching recursive html.....')
+                for url in self.recursive_urls:
+                    self.view.display_item('fetching html from ' + url + '.....')
+                    result = self.requests.get(url)
+                    self.requests_status_code = result.status_code
+                    self.recursive_request_data.append(result.text)
+                    self.recursive_request_data_count += 1
+            else:
+                self.view.display_item('no recursive urls set.....')
+        except requests.RequestException:
+            self.view.display_item(self.CONNECTION_ERROR_MSG)
 
     def get_request_data(self):
         return self.request_data
