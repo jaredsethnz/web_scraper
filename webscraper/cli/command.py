@@ -75,8 +75,8 @@ class Command(Cmd):
         cd  -- consolidate all filtered data                            |   example: data cd--'cd_option':'cd_option'
                                                                         |
             -- cd OPTIONS --                                            |
-            kw    -- filters data by keywords                           |   example: data cd--kw:kw
-            child -- filters data by children                           |   example: data cd--kw:child
+            kw    -- filters data by keywords                           |   example: data cd--kw:0:0|kw:0:0
+            child -- filters data by children                           |   example: data cd--kw:0:0|child:0:0
                                                                         |
         wo  -- display all created web objects                          |   example: data wo
         p  -- prints data related to filtered data                      |   example: data p--'p_option'
