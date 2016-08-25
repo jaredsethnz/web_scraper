@@ -19,7 +19,6 @@ class GraphCreator(OptionFilter):
         return self.command(args, graph_creator_options)
 
     def display_graph(self, *args):
-        self.view.display_item('displaying graph.....')
 
         labels = []
         sizes = []
@@ -36,16 +35,16 @@ class GraphCreator(OptionFilter):
             colors.append(color)
             explode.append(0.0)
             count = (count + 1) if count < color_count else 0
+        if len(self.data) > 0:
+            explode_index = sizes.index(largest_value)
+            explode[explode_index] = 0.1
 
-        explode_index = sizes.index(largest_value)
-        explode[explode_index] = 0.1
-
-        plt.title(args[self.PARAMETER_ONE])
-        plt.pie(sizes, explode=explode, labels=labels, colors=colors,
-                autopct='%1.1f%%', shadow=True, startangle=90)
-        plt.axis('equal')
-
-        plt.show()
+            plt.title(args[self.PARAMETER_ONE])
+            plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+                    autopct='%1.1f%%', shadow=True, startangle=90)
+            plt.axis('equal')
+            self.view.display_item('displaying graph.....')
+            plt.show()
 
     def graph_data(self, *args):
         self.data.clear()

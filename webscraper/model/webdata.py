@@ -43,10 +43,11 @@ class WebData(OptionFilter):
 
     def print_data(self, *args):
         attr = self.method_options(args[self.COMMAND_OPTION], web_data_print_options)
-        if not isinstance(attr, list):
-            self.view.display_item(args[self.COMMAND_OPTION] + ': ' + str(attr))
-        else:
-            self.view.display_items(attr)
+        if attr is not None:
+            if not isinstance(attr, list):
+                self.view.display_item(args[self.COMMAND_OPTION] + ': ' + str(attr))
+            else:
+                self.view.display_items(attr)
 
     def print_web_data_object(self, *args):
         self.view.display_item('displaying web data objects.....')

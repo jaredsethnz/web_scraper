@@ -14,7 +14,7 @@ class WebRequest(OptionFilter, MessageHandler):
 
     def __init__(self):
         super(OptionFilter).__init__()
-        self.url = 'https://www.mightyape.co.nz/Games/PS4/Best-Sellers'
+        self.url = ''
         self.url_padding = ''
         self.recursive_urls = []
         self.requests = requests
@@ -29,10 +29,11 @@ class WebRequest(OptionFilter, MessageHandler):
 
     def print_data(self, *args):
         attr = self.method_options(args[self.COMMAND_OPTION], web_request_print_options)
-        if isinstance(attr, str):
-            self.view.display_item(args[self.COMMAND_OPTION] + ': ' + str(attr))
-        else:
-            self.view.display_items(attr)
+        if attr is not None:
+            if isinstance(attr, str):
+                self.view.display_item(args[self.COMMAND_OPTION] + ': ' + str(attr))
+            else:
+                self.view.display_items(attr)
 
     def set_url(self, *args):
         match = urlparse(args[self.COMMAND_OPTION])

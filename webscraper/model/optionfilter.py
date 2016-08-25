@@ -73,6 +73,7 @@ class OptionFilter(object):
             else:
                 self.view.display_item(self.COMMAND_ERROR_MSG)
                 return None
+                break
         return None if len(params) is 0 else params
 
     def check_second_level_param_count(self, params, count):
