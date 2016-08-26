@@ -1,4 +1,3 @@
-
 class ConsoleView(object):
     """
     Console view handles all output to console.
@@ -8,7 +7,11 @@ class ConsoleView(object):
         print(item)
 
     def display_items(self, items):
-        print('-----------------------------------------------------------------\n')
+        print(
+            '-----------------------------------'
+            '------------------------------\n')
         for item in items:
             print(item)
-            print('\n-----------------------------------------------------------------\n')
+            print(
+                '\n--------------------------------'
+                '---------------------------------\n')

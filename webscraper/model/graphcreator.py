@@ -61,7 +61,9 @@ class GraphCreator(OptionFilter):
                 else:
                     self.str_data(wd_attr)
             except (AttributeError, UnboundLocalError):
-                self.view.display_item('Error, WebObject contains no attribute ' + attr_name + '.....')
+                self.view.\
+                    display_item('Error, WebObject contains no attribute ' +
+                                 attr_name + '.....')
 
     def currency_data(self, value):
         self.view.display_item('currency')
@@ -80,7 +82,8 @@ class GraphCreator(OptionFilter):
             print(key + ': ' + str(value))
 
 # possible graph creator options and parameter count
-graph_creator_options = {'g': ['display_graph', 2], 'd': ['graph_data', 2], 'gd': ['display_graph_data', 1]}
+graph_creator_options = {'g': ['display_graph', 2], 'd': ['graph_data', 2],
+                         'gd': ['display_graph_data', 1]}
 
 data_type_funcs = {'str': 'str_data', 'decimal.Decimal': 'currency_data'}
 

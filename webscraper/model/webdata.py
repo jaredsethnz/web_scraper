@@ -42,19 +42,23 @@ class WebData(OptionFilter):
         del self.web_data_objects[:]
 
     def print_data(self, *args):
-        attr = self.method_options(args[self.COMMAND_OPTION], web_data_print_options)
+        attr = self.method_options(args[self.COMMAND_OPTION],
+                                   web_data_print_options)
         if attr is not None:
             if not isinstance(attr, list):
-                self.view.display_item(args[self.COMMAND_OPTION] + ': ' + str(attr))
+                self.view.display_item(args[self.COMMAND_OPTION] + ': '
+                                       + str(attr))
             else:
                 self.view.display_items(attr)
 
     def print_web_data_object(self, *args):
         self.view.display_item('displaying web data objects.....')
-        self.view.display_item('----------------------------------------------------------------')
+        self.view.display_item('---------------------------------'
+                               '-----------------------------------')
         for wo in self.web_data_objects:
             wo.func_display_data(wo, self.view)
-            self.view.display_item('----------------------------------------------------------------')
+            self.view.display_item('-----------------------------'
+                                   '-----------------------------------')
 
     def display_saves(self, *args):
         self.data_handler.display_save_list()
@@ -66,18 +70,21 @@ class WebData(OptionFilter):
 
     def save_data(self, *args):
         self.view.display_item('saving data to disk.....')
-        self.data_handler.save_objects(self.web_data_objects, args[self.PARAMETER_ONE])
+        self.data_handler.save_objects(self.web_data_objects,
+                                       args[self.PARAMETER_ONE])
 
     def remove_data(self, *args):
         self.data_handler.remove_objects(args[self.PARAMETER_ONE])
 
     def get_request_data(self, *args):
         try:
-            data_options = self.check_second_level_args(args)[self.COMMAND_OPTION]
+            data_options = self.check_second_level_args(args)
+            [self.COMMAND_OPTION]
             data = self.web_request.get_request_data()
             req_data = BeautifulSoup(data, 'html.parser') \
                 .findAll(data_options[self.TAG_TYPE],
-                         attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
+                         attrs={data_options[self.CLASS_ID]: data_options
+                         [self.CLASS_ID_NAME]})
             for data in req_data:
                 self.filtered_data.append(data)
                 self.view.display_item('filtering data.....')
@@ -87,12 +94,14 @@ class WebData(OptionFilter):
 
     def get_recursive_request_data(self, *args):
         try:
-            data_options = self.check_second_level_args(args)[self.COMMAND_OPTION]
+            data_options = self.check_second_level_args(args)
+            [self.COMMAND_OPTION]
             for data in self.web_request.get_recursive_request_data():
                 self.view.display_item('filtering recursive data.....')
                 rec_data = BeautifulSoup(data, 'html.parser') \
                     .find(data_options[self.TAG_TYPE],
-                          attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
+                          attrs={data_options[self.CLASS_ID]: data_options
+                          [self.CLASS_ID_NAME]})
                 self.filtered_recursive_data.append(rec_data)
         except TypeError:
             self.view.display_item(self.COMMAND_ERROR_MSG)
@@ -100,7 +109,8 @@ class WebData(OptionFilter):
 
     def filter_urls(self, *args):
         try:
-            data_options = self.check_second_level_args(args)[self.COMMAND_OPTION]
+            data_options = self.check_second_level_args(args)
+            [self.COMMAND_OPTION]
             self.view.display_item('filtering urls.....')
             for data in self.filtered_data:
                 tag_depth = self.check_data_int(data_options[self.CLASS_ID])
@@ -109,7 +119,8 @@ class WebData(OptionFilter):
                     self.web_request.add_recursive_url(url[tag_depth]['href'])
                 else:
                     url = data.find(data_options[self.TAG_TYPE],
-                                    attrs={data_options[self.CLASS_ID]: data_options[self.CLASS_ID_NAME]})
+                                    attrs={data_options[self.CLASS_ID]:
+                                    data_options[self.CLASS_ID_NAME]})
                     self.web_request.add_recursive_url(url['href'])
         except (TypeError, KeyError, IndexError):
             self.view.display_item(self.COMMAND_ERROR_MSG)
@@ -120,7 +131,8 @@ class WebData(OptionFilter):
         if kw_pairs is not None:
             for kw_pair in kw_pairs:
                 keywords = [kw_pair[0], kw_pair[1], kw_pair[2]]
-                self.view.display_item('adding tag, class pair: ' + str(keywords))
+                self.view.display_item('adding tag, class pair: '
+                                       + str(keywords))
                 self.filtered_data_keywords.append(keywords)
 
     def set_recursive_data_keywords(self, *args):
@@ -133,9 +145,13 @@ class WebData(OptionFilter):
 
     def consolidate_data(self, *args):
         params = self.check_second_level_args(args)
-        if params is not None and self.check_second_level_param_count(params, self.CONSOLIDATE_DATA_PARAM_COUNT):
-            func_one = self.method_options(params[self.PARAMETER_ONE][self.PARAMETER_ONE], web_data_consolidate_options)
-            func_two = self.method_options(params[self.PARAMETER_TWO][self.PARAMETER_ONE], web_data_consolidate_options)
+        if params is not None and self.check_second_level_param_count\
+                    (params, self.CONSOLIDATE_DATA_PARAM_COUNT):
+            func_one = self.method_options(params[self.PARAMETER_ONE]
+                                           [self.PARAMETER_ONE],
+                                           web_data_consolidate_options)
+            func_two = self.method_options(params[self.PARAMETER_TWO]
+                                           [self.PARAMETER_ONE], web_data_consolidate_options)
             try:
                 attr_one = func_one(self.filtered_data, self.filtered_data_keywords,
                                     params[self.PARAMETER_ONE][self.PARAMETER_TWO],

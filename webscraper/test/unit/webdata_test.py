@@ -11,7 +11,8 @@ class WebDataTest(WebData, TestCase):
         self.test = TestCase()
 
     def print_test_title(self, text, number):
-        self.view.display_item('----------------' + text + '::' + number + '----------------')
+        self.view.display_item('----------------' + text + '::'
+                               + number + '----------------')
 
     # All WebRequest unit tests below
     def save_data_test_one(self):

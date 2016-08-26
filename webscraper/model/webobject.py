@@ -6,7 +6,6 @@ from os import remove
 
 
 class WebObject(object):
-
     def __init__(self):
         pass
 
@@ -18,14 +17,12 @@ class WebObject(object):
 
 
 class WebObjectFactory(object):
-
     def build_object(self, *args):
         data_object = type(args[0], (WebObject,), args[1])
         return data_object
 
 
 class DataHandler(object):
-
     def __init__(self):
         self.web_object_factory = WebObjectFactory()
         self.view = ConsoleView()
@@ -37,7 +34,8 @@ class DataHandler(object):
             with open('savelist.pickle', 'rb') as input_file:
                 s_list = pickle.load(input_file)
         except (EOFError, FileNotFoundError):
-            self.view.display_item('No save list found, creating new save list.....')
+            self.view.display_item('No save list found, '
+                                   'creating new save list.....')
             with open('savelist.pickle', 'wb') as output_file:
                 pickle.dump(s_list, output_file)
         return s_list
@@ -66,7 +64,7 @@ class DataHandler(object):
 
     def save_objects(self, web_objs, path):
         try:
-            sys.setrecursionlimit(1000000)
+            sys.setrecursionlimit(50000)
             objs = []
             for obj in web_objs:
                 dict = obj.__dict__.copy()
@@ -94,9 +92,8 @@ class DataHandler(object):
             with open(path, 'rb') as input_file:
                 web_objs = pickle.load(input_file)
             for obj in web_objs:
-                loaded_objs.append(self.web_object_factory.build_object('product', obj))
+                loaded_objs.append(self.web_object_factory
+                                   .build_object('product', obj))
         except FileNotFoundError:
             self.view.display_item('File ' + path + ' not found.....')
         return loaded_objs
-
-

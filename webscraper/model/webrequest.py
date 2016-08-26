@@ -28,16 +28,19 @@ class WebRequest(OptionFilter, MessageHandler):
         return self.command(args, web_request_options)
 
     def print_data(self, *args):
-        attr = self.method_options(args[self.COMMAND_OPTION], web_request_print_options)
+        attr = self.method_options(args[self.COMMAND_OPTION],
+                                   web_request_print_options)
         if attr is not None:
             if isinstance(attr, str):
-                self.view.display_item(args[self.COMMAND_OPTION] + ': ' + str(attr))
+                self.view.display_item(args[self.COMMAND_OPTION] + ': ' +
+                                       str(attr))
             else:
                 self.view.display_items(attr)
 
     def set_url(self, *args):
         match = urlparse(args[self.COMMAND_OPTION])
-        if match[self.URL_SCHEME] == self.URL_SCHEME_HTTP or match[self.URL_SCHEME] == self.URL_SCHEME_HTTPS:
+        if match[self.URL_SCHEME] == self.URL_SCHEME_HTTP \
+                or match[self.URL_SCHEME] == self.URL_SCHEME_HTTPS:
             self.url = args[self.COMMAND_OPTION]
             self.view.display_item('setting url.....')
         else:
@@ -45,7 +48,8 @@ class WebRequest(OptionFilter, MessageHandler):
 
     def set_url_padding(self, *args):
         match = urlparse(args[self.COMMAND_OPTION])
-        if match[self.URL_SCHEME] == self.URL_SCHEME_HTTP or match[self.URL_SCHEME] == self.URL_SCHEME_HTTPS:
+        if match[self.URL_SCHEME] == self.URL_SCHEME_HTTP \
+                or match[self.URL_SCHEME] == self.URL_SCHEME_HTTPS:
             self.url_padding = args[self.COMMAND_OPTION]
             self.view.display_item('setting url padding.....')
         else:
@@ -53,13 +57,15 @@ class WebRequest(OptionFilter, MessageHandler):
 
     def add_recursive_url(self, *args):
         if self.check_url((self.url_padding + args[self.COMMAND_OPTION])):
-            self.recursive_urls.append(self.url_padding + args[self.COMMAND_OPTION])
+            self.recursive_urls.append(self.url_padding +
+                                       args[self.COMMAND_OPTION])
             self.view.display_item('adding url.....')
         else:
             self.view.display_item(self.URL_NOT_VALID_MSG)
 
     def fetch_html(self, *args):
-        if MessageHandler.check_none_condition(self, self.url, 'url not set.....'):
+        if MessageHandler.check_none_condition(self, self.url,
+                                               'url not set.....'):
             self.view.display_item('fetching html from ' + self.url + '.....')
             try:
                 result = self.requests.get(self.url)
@@ -73,7 +79,8 @@ class WebRequest(OptionFilter, MessageHandler):
             if len(self.recursive_urls) > 0:
                 self.view.display_item('fetching recursive html.....')
                 for url in self.recursive_urls:
-                    self.view.display_item('fetching html from ' + url + '.....')
+                    self.view.display_item('fetching html from ' +
+                                           url + '.....')
                     result = self.requests.get(url)
                     self.requests_status_code = result.status_code
                     self.recursive_request_data.append(result.text)
@@ -92,8 +99,11 @@ class WebRequest(OptionFilter, MessageHandler):
 # possible we request options and parameter count
 web_request_options = {'p': ['print_data', 2], 'u': ['set_url', 2],
                        'f': ['fetch_html', 1], 'up': ['set_url_padding', 2],
-                       'ur': ['add_recursive_url', 2], 'rf': ['recursive_fetch', 1]}
+                       'ur': ['add_recursive_url', 2],
+                       'rf': ['recursive_fetch', 1]}
 
 web_request_print_options = {'url': 'url', 'urlpadd': 'url_padding',
-                             'recurls': 'recursive_urls', 'reqdata': 'request_data',
-                             'recdata': 'recursive_request_data', 'recdatacount': 'recursive_request_data_count'}
+                             'recurls': 'recursive_urls',
+                             'reqdata': 'request_data',
+                             'recdata': 'recursive_request_data',
+                             'recdatacount': 'recursive_request_data_count'}
